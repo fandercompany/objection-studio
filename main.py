@@ -82,7 +82,6 @@ class Ui_tbWidget(object):
                                       "    border-radius:1px;\n"
                                       "    font-size:18px;\n"
 
-                                      # ----> "    font-family:dripicons-v2;\n"                        # <---- убрал
 
                                       "}\n"
                                       "QPushButton:hover{\n"
