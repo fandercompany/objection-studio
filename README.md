@@ -31,12 +31,12 @@ Objection.lol App on PyQt5.
 
 * [Requests](https://requests.readthedocs.io/) - Module
 * [Locale](https://docs.python.org/3/library/locale.html) - Module
-* [Qt](https://qt.io)
-* [Inspect](https://docs.python.org/3/library/inspect.html)
-* [Sys](https://docs.python.org/3/library/sys.html)
-* [Os](https://docs.python.org/3/library/os.html)
-* [Subprocess](https://docs.python.org/3/library/subprocess.html)
-* [Time](https://docs.python.org/3/library/time.html)
+* [Qt](https://qt.io) - Module
+* [Inspect](https://docs.python.org/3/library/inspect.html) - Module
+* [Sys](https://docs.python.org/3/library/sys.html) - Module
+* [Os](https://docs.python.org/3/library/os.html) - Module
+* [Subprocess](https://docs.python.org/3/library/subprocess.html) - Module
+* [Time](https://docs.python.org/3/library/time.html) - Module
 
 <br/>
 
