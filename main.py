@@ -1,7 +1,31 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.Qt import *
+from PyQt5.QtCore import QProcess
 import pyautogui as p
+import locale
+import inspect
+import os
+import sys
+import time
+import subprocess
+import requests
+
+lang = locale.getdefaultlocale()[0]
+print(f'lang = {lang}')  #
+
+
+def get_script_dir(follow_symlinks=True):
+    if getattr(sys, 'frozen', False):  # py2exe, PyInstaller, cx_Freeze
+        path = os.path.abspath(sys.executable)
+    else:
+        path = inspect.getabsfile(get_script_dir)
+    if follow_symlinks:
+        path = os.path.realpath(path)
+    return os.path.dirname(path)
+
+
+script_dir = get_script_dir()
 
 
 class Ui_tbWidget(object):
@@ -91,11 +115,9 @@ class Ui_tbWidget(object):
         self.buttonMaximum = QtWidgets.QPushButton(self.tbWidget_3)
         self.buttonMaximum.setMinimumSize(QtCore.QSize(30, 30))
         self.buttonMaximum.setMaximumSize(QtCore.QSize(30, 30))
-        # -        self.buttonMaximum.setStyleSheet("font-size:13px;")
-        # -        self.buttonMaximum.setCheckable(True)
-        font = QtGui.QFont()  # +++
-        font.setFamily("Webdings")  # +++
-        self.buttonMaximum.setFont(font)  # +++
+        font = QtGui.QFont()
+        font.setFamily("Webdings")
+        self.buttonMaximum.setFont(font)
         self.buttonMaximum.setObjectName("buttonMaximum")
         self.gridLayout.addWidget(self.buttonMaximum, 0, 1, 1, 1)
 
@@ -135,13 +157,12 @@ class Ui_tbWidget(object):
 
 
 class TitleBar(QtWidgets.QWidget, Ui_tbWidget):
-    def __init__(self, parent=None):  # +++ parent
-        super(TitleBar, self).__init__(parent)  # +++ parent
+    def __init__(self, parent=None):
+        super(TitleBar, self).__init__(parent)
 
         self.setupUi(self)
 
-        # +++ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-        self.buttonNormal.setVisible(False)  # +++
+        self.buttonNormal.setVisible(False)
         self.parent = parent  # +++
         self.buttonMinimum.setFocusPolicy(QtCore.Qt.NoFocus)
         self.buttonMaximum.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -164,9 +185,6 @@ class TitleBar(QtWidgets.QWidget, Ui_tbWidget):
         return super(TitleBar, self).eventFilter(target, event)
 
 
-# +++ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MainWindow, self).__init__(*args, **kwargs)
@@ -174,10 +192,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.centralwidget = QtWidgets.QWidget()
         self.centralwidget.setObjectName("centralwidget")
         self.setCentralWidget(self.centralwidget)
-        self.resize(1440, 900)
+        self.resize(1400, 900)
 
-        def _downloadRequested(item):  # QWebEngineDownloadItem
-            p.alert(f'Download your file at {item.path()}', 'Request to download file', button='OK')
+        def _downloadRequested(item):
+            p.alert(f'Download your file at {item.path()}',
+                    'Request to download file', button='OK')
             item.accept()
 
         self.browser = QWebEngineView()
@@ -188,11 +207,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.height = self.screenRect.height()
         # self.width = self.screenRect.width()
 
-        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint |
-                            QtCore.Qt.FramelessWindowHint)
+        # востановите
+        self.setWindowFlags(  # QtCore.Qt.WindowStaysOnTopHint |
+            QtCore.Qt.FramelessWindowHint)
         self.setWindowIcon(QIcon('objection.png'))
         # +++
-        self.titleBar = TitleBar(self)  # +++ self
+        self.titleBar = TitleBar(self)
 
         layout = QtWidgets.QVBoxLayout(self.centralwidget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -201,6 +221,9 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(self.browser)
 
         self.oldPos = self.pos()
+
+        # !!! +++
+        self.langs = ['ru_RU', 'uk_UK', 'be_BE', 'kz_KZ']  # !!! +++
 
     def mousePressEvent(self, event):
         self.oldPos = event.globalPos()
@@ -213,41 +236,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.move(self.x() + delta.x(), self.y() + delta.y())
         self.oldPos = event.globalPos()
 
-    def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_F10:
-            self.url_start = self.browser.history().backItem()
-            print(self.url_start)
-            print(self.url_start.url())
-
-    def keyPressEvent(self, event):
-        # если нажата клавиша F11
-        if event.key() == QtCore.Qt.Key_F11:
-            # если в полный экран
-            if self.isFullScreen():
-                # вернуть прежнее состояние
-                self.showNormal()
-            else:
-                # иначе во весь экран
-                self.showFullScreen()
-
+    # +++ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
     def update_title(self):
         title = self.browser.page().title()
         if title == "Ace Attorney Objection Maker":
             self.setWindowTitle(title)
         elif title == "Objection!":
             self.setWindowTitle(title)
-        else:
-            self.browser.setUrl(QUrl("https://objection.lol"))
+        #else:
+         #   self.browser.setUrl(QUrl("https://objection.lol"))
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_F10:
             self.url_start = self.browser.history().backItem()
-            print(self.url_start)
-            print(self.url_start.url())
+            print(f'self.url_start       = {self.url_start}')
+            print(f'self.url_start.url() = {self.url_start.url()}')
 
-    def keyPressEvent(self, event):
-        # если нажата клавиша F11
-        if event.key() == QtCore.Qt.Key_F11:
+        #    def keyPressEvent(self, event):
+        #        # если нажата клавиша F11
+        #        if event.key() == QtCore.Qt.Key_F11:
+        # ----> vvvv
+        elif event.key() == QtCore.Qt.Key_F11:
             # если в полный экран
             if self.isFullScreen():
                 # вернуть прежнее состояние
@@ -255,18 +264,80 @@ class MainWindow(QtWidgets.QMainWindow):
             else:
                 # иначе во весь экран
                 self.showFullScreen()
+        # ----> vvvv
+        elif event.key() == QtCore.Qt.Key_F6:
+            QProcess.startDetached("letter.exe")
+        #        event.accept()
 
-    def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_U:
-            self.showMinimized()
-            objectionid = p.prompt("Enter Objection id (Example: 4177334)", "Enter Objection id.")
-            if objectionid == None:
-                p.alert('Objection id is none', 'None')
-            else:
-                self.browser.setUrl(QUrl(f"https://objection.lol/objection/{objectionid}"))
-                self.showMaximized()
-        event.accept()
-
+        # +++
+        #    def keyPressEvent(self, event):
+        #        if lang == 'ru_RU' or 'uk_UK' or 'be_BE' or 'kz_KZ':
+        # ----> vvvvvvvvvvvvvvvvvvvvv
+        if lang in self.langs:  # !!!
+            if event.key() == QtCore.Qt.Key_F2:
+                self.showMinimized()
+                objectionid = p.prompt("Введи айди сцены (Например: 4177334)", "Введи айди сцены.")
+                if objectionid == None:
+                    p.alert('Objection id is none', 'None')
+                    self.showMaximized()
+                else:
+                    self.browser.setUrl(QUrl(f"https://objection.lol/objection/{objectionid}"))
+                    self.showMaximized()
+            # --------> vvvv
+            elif event.key() == QtCore.Qt.Key_F3:
+                self.showMinimized()
+                objectionid = p.prompt("Введи айди кейса (Например: 5do5wuim)", "Введи айди кейса.")
+                if objectionid == None:
+                    p.alert('Введенный айди кейса не имеет никакого значения', 'Нету значения')
+                    time.sleep(3)
+                    self.showMaximized()
+                else:
+                    self.browser.setUrl(QUrl(f"https://objection.lol/case/{objectionid}"))
+                    self.showMaximized()
+                # --------> vvvv
+            elif event.key() == QtCore.Qt.Key_F8:
+                im1 = p.screenshot()
+                im1.save('objectionlol_screenshot.png')
+                time.sleep(2)
+                os.system(f"{script_dir}\objectionlol_screenshot.png")
+            elif event.key() == QtCore.Qt.Key_F7:
+                self.browser.setUrl(QUrl("https://objection.lol"))
+            elif event.key() == QtCore.Qt.Key_F1:
+                import webbrowser
+                webbrowser.open('http://objection.ga')
+        else:
+            if event.key() == QtCore.Qt.Key_F2:
+                self.showMinimized()
+                objectionid = p.prompt("Enter Objection id (Example: 4177334)", "Enter Objection id.")
+                if objectionid == None:
+                    p.alert('Введенный айди сцены не имеет никакого значения', 'Нету значения')
+                    time.sleep(3)
+                    self.showMaximized()
+                else:
+                    self.browser.setUrl(QUrl(f"https://objection.lol/objection/{objectionid}"))
+                    self.showMaximized()
+            # --------> vvvv
+            elif event.key() == QtCore.Qt.Key_F3:
+                self.showMinimized()
+                objectionid = p.prompt("Enter Objection case id (Example: 5do5wuim)", "Enter Objection case id.")
+                if objectionid == None:
+                    p.alert('Objection case id is none', 'None')
+                    time.sleep(3)
+                    self.showMaximized()
+                else:
+                    self.browser.setUrl(QUrl(f"https://objection.lol/case/{objectionid}"))
+                    self.showMaximized()
+            # --------> vvvv
+            elif event.key() == QtCore.Qt.Key_F8:
+                im1 = p.screenshot()
+                im1.save('objectionlol_screenshot.png')
+                time.sleep(2)
+                os.system(f"{script_dir}\objectionlol_screenshot.png")
+            elif event.key() == QtCore.Qt.Key_F7:
+                self.browser.setUrl(QUrl("https://objection.lol"))
+            elif event.key() == QtCore.Qt.Key_F1:
+                import webbrowser
+                webbrowser.open('http://objection.ga')
 
 if __name__ == "__main__":
     import sys
